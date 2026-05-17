@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { LanguageProvider } from './context/LanguageContext'
 import Navbar from './components/Navbar'
 import HomeFeed from './pages/HomeFeed'
-import NeighborhoodExplorer from './pages/NeighborhoodExplorer'
+import MiamiMapExplore from './pages/MiamiMapExplore'
 import NeighborhoodDetail from './pages/NeighborhoodDetail'
 import RestaurantProfile from './pages/RestaurantProfile'
 import Leaderboard from './pages/Leaderboard'
@@ -16,7 +16,7 @@ export default function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<HomeFeed />} />
-          <Route path="/explore" element={<NeighborhoodExplorer />} />
+          <Route path="/explore" element={<MiamiMapExplore />} />
           <Route path="/explore/:name" element={<NeighborhoodDetail />} />
           <Route path="/restaurant/:id" element={<RestaurantProfile />} />
           <Route path="/leaderboard" element={<Leaderboard />} />

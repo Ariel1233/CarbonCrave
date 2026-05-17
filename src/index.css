@@ -43,6 +43,16 @@ html {
   animation: badgePulse 2s ease-in-out infinite;
 }
 
+/* Map pin pulse ring */
+@keyframes pinPulse {
+  0%   { opacity: 0.6; r: 14px; }
+  100% { opacity: 0;   r: 24px; }
+}
+
+.pin-pulse {
+  animation: pinPulse 1.4s ease-out infinite;
+}
+
 /* Base font */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
