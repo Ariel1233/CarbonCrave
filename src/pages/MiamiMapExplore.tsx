@@ -48,18 +48,17 @@ const ZONES: Zone[] = [
 
 const MAP_VB = '0 0 350 276'
 
-// Pin tip (x, y); circle centre sits 14px above tip
 const PIN_POS: Record<string, [number, number]> = {
-  '1':  [130, 144], // Verde Havana       – Calle Ocho
-  '2':  [252, 164], // The Green Grill    – Brickell
-  '3':  [46,  122], // Sabor Borinquen    – Doral
-  '4':  [148, 42],  // Ti Manje           – Little Haiti
-  '5':  [184, 110], // Roots & Routes     – Wynwood
-  '6':  [188, 170], // Soul Food & Soul   – Overtown
-  '7':  [310, 164], // Oceano             – South Beach
-  '8':  [124, 214], // La Finca          – Coral Gables
-  '9':  [108, 156], // Casa Borinquen     – Calle Ocho
-  '10': [172, 58],  // Mangue Chaud       – Little Haiti
+  '1':  [130, 144],
+  '2':  [252, 164],
+  '3':  [46,  122],
+  '4':  [148, 42],
+  '5':  [184, 110],
+  '6':  [188, 170],
+  '7':  [310, 164],
+  '8':  [124, 214],
+  '9':  [108, 156],
+  '10': [172, 58],
 }
 
 const NEIGHBORHOODS: Neighborhood[] = [
@@ -94,31 +93,11 @@ function passesEcoFilter(r: Restaurant, f: string) {
   return true
 }
 
-// ─── Small helpers ────────────────────────────────────────────────────────────
-function StarBadge({ rating }: { rating: number }) {
-  return (
-    <span className="inline-flex items-center gap-0.5 bg-black/60 text-white text-xs font-bold px-2 py-0.5 rounded-full backdrop-blur-sm">
-      <Star size={10} className="fill-yellow-400 text-yellow-400" />
-      {rating.toFixed(1)}
-    </span>
-  )
-}
-
-function StarRow({ rating, count }: { rating: number; count?: number }) {
-  return (
-    <span className="inline-flex items-center gap-1">
-      <Star size={12} className="fill-yellow-400 text-yellow-400" />
-      <span className="font-bold text-sm">{rating.toFixed(1)}</span>
-      {count !== undefined && <span className="text-xs text-gray-400">({count})</span>}
-    </span>
-  )
-}
-
 function EcoScorePill({ score, badge }: { score: number; badge: EcoBadgeType }) {
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full border ${BADGE_PILL[badge]}`}>
-      <Leaf size={10} />
-      {score}/100
+    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border ${BADGE_PILL[badge]}`}>
+      <Leaf size={9} />
+      {score}
     </span>
   )
 }
@@ -144,7 +123,7 @@ function ZoneLabel({ z, isActive }: { z: Zone; isActive: boolean }) {
   )
 }
 
-// ─── Circular logo-style SVG pin (matches reference screenshot) ───────────────
+// ─── Restaurant pin ───────────────────────────────────────────────────────────
 function RestaurantPin({
   r, isSelected, isVisible, onClick,
 }: {
@@ -157,26 +136,19 @@ function RestaurantPin({
   if (!pos) return null
   const [px, py] = pos
   const { bg, border } = BADGE_COLOR[r.badge]
-  const R = isSelected ? 14 : 11           // circle radius
-  const cy = py - R - 2                   // circle centre
+  const R = isSelected ? 14 : 11
+  const cy = py - R - 2
 
   return (
     <g
       style={{ cursor: 'pointer', opacity: isVisible ? 1 : 0.15, transition: 'opacity 0.25s' }}
       onClick={e => { e.stopPropagation(); onClick() }}
     >
-      {/* Outer glow ring when selected */}
       {isSelected && (
         <circle cx={px} cy={cy} r={R + 6} fill={border} opacity="0.75" className="pin-pulse" />
       )}
-
-      {/* White border ring */}
       <circle cx={px} cy={cy} r={R + 2.5} fill="white" />
-
-      {/* Coloured background fill */}
       <circle cx={px} cy={cy} r={R} fill={bg} />
-
-      {/* Restaurant initial (or EcoScore when selected) */}
       <text
         x={px} y={cy + (isSelected ? 3.5 : 4)}
         textAnchor="middle"
@@ -187,18 +159,8 @@ function RestaurantPin({
       >
         {isSelected ? r.ecoScore.total : r.name[0]}
       </text>
-
-      {/* Tiny tail / pointer */}
-      <path
-        d={`M${px - 3},${py - 5} L${px + 3},${py - 5} L${px},${py}`}
-        fill="white"
-      />
-      <path
-        d={`M${px - 2.5},${py - 4.5} L${px + 2.5},${py - 4.5} L${px},${py - 1}`}
-        fill={bg}
-      />
-
-      {/* Eco score tag above pin when selected */}
+      <path d={`M${px - 3},${py - 5} L${px + 3},${py - 5} L${px},${py}`} fill="white" />
+      <path d={`M${px - 2.5},${py - 4.5} L${px + 2.5},${py - 4.5} L${px},${py - 1}`} fill={bg} />
       {isSelected && (
         <g>
           <rect x={px - 14} y={cy - R - 14} width="28" height="11" rx="5.5" fill={bg} />
@@ -211,7 +173,7 @@ function RestaurantPin({
   )
 }
 
-// ─── Bottom preview card (reference-style: large image block + details) ───────
+// ─── Apple Maps-style bottom preview card ─────────────────────────────────────
 function PreviewCard({
   r, lang, saved, onSave, onView, onClose,
 }: {
@@ -225,85 +187,88 @@ function PreviewCard({
   const te = (en: string, es: string) => lang === 'es' ? es : en
 
   return (
-    <div className="bg-white rounded-t-3xl shadow-2xl overflow-hidden">
-      {/* Food image block (gradient placeholder) */}
-      <div
-        className={`relative w-full bg-gradient-to-br ${r.videoColor}`}
-        style={{ height: 160 }}
-        onClick={onView}
-      >
-        {/* Star rating badge — top-right corner like the reference */}
-        <div className="absolute top-3 right-3">
-          <StarBadge rating={r.rating} />
-        </div>
-
-        {/* Close button */}
-        <button
-          onClick={e => { e.stopPropagation(); onClose() }}
-          className="absolute top-3 left-3 w-8 h-8 flex items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm"
-          aria-label="Close"
-        >
-          <X size={14} />
-        </button>
-
-        {/* Save button */}
-        <button
-          onClick={e => { e.stopPropagation(); onSave() }}
-          className="absolute bottom-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow"
-          aria-label={saved ? te('Unsave', 'Quitar') : te('Save', 'Guardar')}
-        >
-          <Heart
-            size={17}
-            className={saved ? 'text-red-500 fill-red-500' : 'text-gray-500'}
-            fill={saved ? 'currentColor' : 'none'}
-          />
-        </button>
-
-        {/* Big restaurant initial centred in the image block */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-white/30 font-black" style={{ fontSize: 80, lineHeight: 1 }}>
-            {r.name[0]}
-          </span>
-        </div>
-
-        {/* EcoBadge pinned to bottom-left */}
-        <div className="absolute bottom-3 left-3">
-          <EcoBadge badge={r.badge} lang={lang} size="sm" />
-        </div>
+    <div className="bg-white rounded-t-2xl shadow-lg border-t border-gray-100 overflow-hidden">
+      {/* Handle */}
+      <div className="pt-2.5 pb-1 flex justify-center">
+        <div className="w-8 h-1 bg-gray-200 rounded-full" />
       </div>
 
-      {/* Details section */}
-      <div className="px-4 pt-3 pb-5">
-        <div className="flex items-start justify-between gap-2 mb-1">
+      <div className="px-4 pb-4 pt-1">
+        {/* Header row */}
+        <div className="flex items-start gap-3 mb-3">
+          {/* Thumbnail */}
+          <div
+            className={`w-14 h-14 rounded-xl bg-gradient-to-br ${r.videoColor} flex items-center justify-center flex-shrink-0 cursor-pointer`}
+            onClick={onView}
+          >
+            <span className="text-white text-xl font-bold opacity-90">{r.name[0]}</span>
+          </div>
+
           <div className="flex-1 min-w-0">
-            <h3 className="font-black text-gray-900 text-lg leading-tight truncate">{r.name}</h3>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <div className="flex items-start justify-between gap-2">
+              <h3
+                className="font-semibold text-gray-900 text-base leading-tight cursor-pointer"
+                onClick={onView}
+              >
+                {r.name}
+              </h3>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={e => { e.stopPropagation(); onSave() }}
+                  aria-label={saved ? te('Unsave', 'Quitar') : te('Save', 'Guardar')}
+                >
+                  <Heart
+                    size={17}
+                    className={saved ? 'text-red-500 fill-red-500' : 'text-gray-300 hover:text-red-400'}
+                    fill={saved ? 'currentColor' : 'none'}
+                  />
+                </button>
+                <button
+                  onClick={e => { e.stopPropagation(); onClose() }}
+                  aria-label="Close"
+                  className="text-gray-300 hover:text-gray-500"
+                >
+                  <X size={17} />
+                </button>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-500 mt-0.5">
               {lang === 'es' ? r.cuisineEs : r.cuisine} · {r.neighborhood} · {r.priceRange}
             </p>
+
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className="inline-flex items-center gap-0.5">
+                <Star size={11} className="fill-yellow-400 text-yellow-400" />
+                <span className="text-xs font-semibold text-gray-700">{r.rating.toFixed(1)}</span>
+                <span className="text-xs text-gray-400">({r.reviewCount})</span>
+              </span>
+              <EcoBadge badge={r.badge} lang={lang} size="sm" />
+            </div>
           </div>
-          <EcoScorePill score={r.ecoScore.total} badge={r.badge} />
         </div>
 
-        {/* Eco stats row */}
-        <div className="flex gap-3 text-xs text-gray-500 mt-1 mb-3">
-          <span>
-            <span className="font-bold text-green-700">{r.ecoScore.wastePercent}%</span>
-            {' '}{te('food waste', 'desperdicio')}
-          </span>
-          <span className="text-gray-300">·</span>
-          <span>
-            <span className="font-bold text-sky-700">{r.ecoScore.offsetPercent}%</span>
-            {' '}{te('CO₂ offset', 'compensación CO₂')}
-          </span>
-          <span className="text-gray-300">·</span>
-          <StarRow rating={r.rating} count={r.reviewCount} />
+        {/* Eco stats row — clean horizontal dividers */}
+        <div className="flex items-center bg-gray-50 rounded-xl overflow-hidden mb-3 divide-x divide-gray-200">
+          <div className="flex-1 py-2 text-center">
+            <div className="text-sm font-bold text-green-700">{r.ecoScore.total}</div>
+            <div className="text-xs text-gray-400">EcoScore</div>
+          </div>
+          <div className="flex-1 py-2 text-center">
+            <div className="text-sm font-bold text-amber-600">{r.ecoScore.wastePercent}%</div>
+            <div className="text-xs text-gray-400">{te('waste', 'desp.')}</div>
+          </div>
+          <div className="flex-1 py-2 text-center">
+            <div className="text-sm font-bold text-sky-600">{r.ecoScore.offsetPercent}%</div>
+            <div className="text-xs text-gray-400">{te('offset', 'CO₂')}</div>
+          </div>
         </div>
 
         {/* Action buttons */}
         <div className="flex gap-2">
           <button
             onClick={onView}
-            className="flex-1 bg-green-600 hover:bg-green-700 active:scale-95 text-white font-bold py-3 rounded-2xl text-sm transition-all"
+            className="flex-1 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
           >
             {te('View Restaurant', 'Ver Restaurante')}
           </button>
@@ -314,10 +279,10 @@ function PreviewCard({
                 '_blank',
               )
             }
-            className="w-12 h-12 flex items-center justify-center rounded-2xl bg-sky-50 text-sky-600 hover:bg-sky-100 active:scale-95 transition-all"
+            className="w-11 h-11 flex items-center justify-center rounded-xl bg-sky-50 text-sky-600 hover:bg-sky-100 active:bg-sky-200 transition-colors flex-shrink-0"
             aria-label={te('Directions', 'Cómo llegar')}
           >
-            <Navigation2 size={18} />
+            <Navigation2 size={16} />
           </button>
         </div>
       </div>
@@ -338,29 +303,30 @@ function ListRow({
   return (
     <div
       onClick={onClick}
-      className="flex items-center gap-3 p-3 bg-white rounded-2xl shadow-sm cursor-pointer hover:shadow-md active:scale-[0.99] transition-all"
+      className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm cursor-pointer hover:shadow active:scale-[0.99] transition-all"
     >
-      {/* Logo circle */}
       <div
-        className={`w-13 h-13 rounded-xl bg-gradient-to-br ${r.videoColor} flex items-center justify-center flex-shrink-0 shadow-sm`}
-        style={{ width: 52, height: 52 }}
+        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${r.videoColor} flex items-center justify-center flex-shrink-0`}
       >
-        <span className="text-white text-xl font-black">{r.name[0]}</span>
+        <span className="text-white text-lg font-bold">{r.name[0]}</span>
       </div>
 
       <div className="flex-1 min-w-0">
-        <h4 className="font-bold text-gray-900 text-sm truncate">{r.name}</h4>
-        <p className="text-xs text-gray-500">
+        <h4 className="font-semibold text-gray-900 text-sm truncate">{r.name}</h4>
+        <p className="text-xs text-gray-500 mt-0.5">
           {r.neighborhood} · {lang === 'es' ? r.cuisineEs : r.cuisine} · {r.priceRange}
         </p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <StarRow rating={r.rating} />
+        <div className="flex items-center gap-2 mt-1">
+          <span className="inline-flex items-center gap-0.5">
+            <Star size={10} className="fill-yellow-400 text-yellow-400" />
+            <span className="text-xs font-semibold text-gray-700">{r.rating.toFixed(1)}</span>
+          </span>
           <EcoBadge badge={r.badge} lang={lang} size="sm" />
         </div>
       </div>
 
       <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-        <span className="text-xs font-black text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+        <span className="text-xs font-bold text-green-700 bg-green-50 border border-green-100 px-2 py-0.5 rounded-full">
           {r.ecoScore.total}/100
         </span>
         <button
@@ -370,7 +336,7 @@ function ListRow({
           }`}
           aria-label={saved ? 'Unsave' : 'Save'}
         >
-          <Heart size={14} fill={saved ? 'currentColor' : 'none'} />
+          <Heart size={13} fill={saved ? 'currentColor' : 'none'} />
         </button>
       </div>
     </div>
@@ -403,8 +369,8 @@ export default function MiamiMapExplore() {
   } | null>(null)
   const didDragRef                                   = useRef(false)
 
-  const PAN_X_MIN = -65   // drag left → reveals South Beach
-  const PAN_X_MAX = 15    // drag right → reveals Doral edge
+  const PAN_X_MIN = -65
+  const PAN_X_MAX = 15
   const PAN_Y_MIN = -20
   const PAN_Y_MAX = 20
 
@@ -514,7 +480,6 @@ export default function MiamiMapExplore() {
     activeEcoFilter !== 'all',
   ].filter(Boolean).length
 
-  // Height of the preview card (used to offset floating buttons)
   const cardVisible = !!selectedRestaurant
 
   return (
@@ -523,7 +488,7 @@ export default function MiamiMapExplore() {
       style={{ top: 56, bottom: 52 }}
     >
     <div
-      className="relative w-full max-w-xl overflow-hidden bg-[#5fbfcf] shadow-2xl"
+      className="relative w-full max-w-xl overflow-hidden bg-[#5fbfcf] shadow-xl"
       onClick={closeAll}
     >
       {/* ─── Search + filter bar ──────────────────────────────────────────── */}
@@ -534,12 +499,12 @@ export default function MiamiMapExplore() {
         {/* Search row */}
         <div className="px-3 pt-2.5 pb-2 flex items-center gap-2">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={15} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
             <input
               value={searchQuery}
               onChange={e => { setSearchQuery(e.target.value); setSelectedRestaurant(null) }}
               placeholder={t('Search restaurants, cuisine…', 'Busca restaurantes, cocina…')}
-              className="w-full pl-9 pr-8 py-2.5 bg-white rounded-2xl text-sm border-0 outline-none shadow-md focus:ring-2 focus:ring-green-300 transition-shadow"
+              className="w-full pl-9 pr-8 py-2.5 bg-white rounded-xl text-sm border-0 outline-none shadow focus:ring-2 focus:ring-green-300 transition-shadow"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -549,30 +514,31 @@ export default function MiamiMapExplore() {
           </div>
 
           {/* Filter icon button */}
-          <button
-            onClick={() => { setShowFilterSheet(v => !v); setShowEcoPanel(false) }}
-            className={`w-11 h-11 rounded-2xl shadow-md flex items-center justify-center flex-shrink-0 transition-colors ${
-              activeFilterCount > 0 ? 'bg-green-600 text-white' : 'bg-white text-gray-600'
-            }`}
-          >
-            <SlidersHorizontal size={17} />
+          <div className="relative flex-shrink-0">
+            <button
+              onClick={() => { setShowFilterSheet(v => !v); setShowEcoPanel(false) }}
+              className={`w-10 h-10 rounded-xl shadow flex items-center justify-center transition-colors ${
+                activeFilterCount > 0 ? 'bg-green-600 text-white' : 'bg-white text-gray-500'
+              }`}
+            >
+              <SlidersHorizontal size={15} />
+            </button>
             {activeFilterCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center pointer-events-none">
                 {activeFilterCount}
               </span>
             )}
-          </button>
+          </div>
         </div>
 
         {/* Neighbourhood quick chips */}
-        <div className="flex gap-2 overflow-x-auto px-3 pb-2.5 scrollbar-hide">
-          {/* "All" chip */}
+        <div className="flex gap-1.5 overflow-x-auto px-3 pb-2.5 scrollbar-hide">
           <button
             onClick={() => { setActiveNeighborhood('All'); setSelectedRestaurant(null) }}
-            className={`flex-shrink-0 flex items-center gap-1 px-3.5 py-1.5 rounded-full text-xs font-bold border shadow-sm whitespace-nowrap transition-all ${
+            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm whitespace-nowrap transition-all ${
               activeNeighborhood === 'All'
-                ? 'bg-green-600 text-white border-green-600 shadow-md'
-                : 'bg-white text-gray-700 border-transparent hover:border-green-200'
+                ? 'bg-green-600 text-white shadow'
+                : 'bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
             {t('All Areas', 'Todo Miami')}
@@ -582,10 +548,10 @@ export default function MiamiMapExplore() {
             <button
               key={n}
               onClick={() => { setActiveNeighborhood(prev => prev === n ? 'All' : n); setSelectedRestaurant(null) }}
-              className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold border shadow-sm whitespace-nowrap transition-all ${
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm whitespace-nowrap transition-all ${
                 activeNeighborhood === n
-                  ? 'bg-green-600 text-white border-green-600 shadow-md'
-                  : 'bg-white text-gray-700 border-transparent hover:border-green-200'
+                  ? 'bg-green-600 text-white shadow'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
               }`}
             >
               {n}
@@ -597,18 +563,17 @@ export default function MiamiMapExplore() {
       {/* Filter sheet dropdown */}
       {showFilterSheet && (
         <div
-          className="absolute left-3 right-3 z-50 bg-white rounded-3xl shadow-2xl p-4"
+          className="absolute left-3 right-3 z-50 bg-white rounded-2xl shadow-xl p-4"
           style={{ top: 108 }}
           onClick={e => e.stopPropagation()}
         >
-          {/* Cuisine */}
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
             {t('Cuisine', 'Cocina')}
           </p>
           <div className="flex flex-wrap gap-1.5 mb-4">
             <button
               onClick={() => setActiveCuisine('all')}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                 activeCuisine === 'all'
                   ? 'bg-amber-500 text-white border-amber-500'
                   : 'bg-gray-50 text-gray-600 border-gray-200'
@@ -620,7 +585,7 @@ export default function MiamiMapExplore() {
               <button
                 key={c}
                 onClick={() => setActiveCuisine(prev => prev === c ? 'all' : c)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                   activeCuisine === c
                     ? 'bg-amber-500 text-white border-amber-500'
                     : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-amber-300'
@@ -631,8 +596,7 @@ export default function MiamiMapExplore() {
             ))}
           </div>
 
-          {/* EcoScore */}
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
             {t('EcoScore', 'EcoScore')}
           </p>
           <div className="flex flex-wrap gap-1.5 mb-4">
@@ -640,7 +604,7 @@ export default function MiamiMapExplore() {
               <button
                 key={f.id}
                 onClick={() => setActiveEcoFilter(f.id)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                   activeEcoFilter === f.id
                     ? 'bg-emerald-600 text-white border-emerald-600'
                     : 'bg-emerald-50 text-emerald-800 border-emerald-100 hover:border-emerald-300'
@@ -659,13 +623,13 @@ export default function MiamiMapExplore() {
                 setActiveNeighborhood('All')
                 setSearchQuery('')
               }}
-              className="flex-1 py-2.5 rounded-2xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
             >
               {t('Clear all', 'Limpiar todo')}
             </button>
             <button
               onClick={() => setShowFilterSheet(false)}
-              className="flex-1 py-2.5 rounded-2xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition-colors"
+              className="flex-1 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors"
             >
               {t('Apply', 'Aplicar')} {activeFilterCount > 0 && `(${activeFilterCount})`}
             </button>
@@ -679,7 +643,6 @@ export default function MiamiMapExplore() {
         style={{ top: 112 }}
         onClick={closeAll}
       >
-        {/* SVG map fills container */}
         <div className="absolute inset-0 flex items-start justify-center pt-0">
           <svg
             ref={svgRef}
@@ -697,7 +660,6 @@ export default function MiamiMapExplore() {
             onClickCapture={e => { if (didDragRef.current) { e.stopPropagation(); e.preventDefault() } }}
           >
             <g transform={`translate(${panOffset.x} ${panOffset.y})`}>
-            {/* ── Real Miami map photograph as base layer ── */}
             <image
               href="/miami-map.png"
               x="0"
@@ -707,7 +669,6 @@ export default function MiamiMapExplore() {
               preserveAspectRatio="xMidYMid slice"
             />
 
-            {/* Neighbourhood zones — semi-transparent colour overlays */}
             {ZONES.map(z => {
               const isActive  = activeNeighborhood === z.id
               const hasResult = filtered.some(r => r.neighborhood === z.id)
@@ -738,7 +699,6 @@ export default function MiamiMapExplore() {
               )
             })}
 
-            {/* Restaurant pins (low-badge pins drawn first so high-badge render on top) */}
             {[...restaurants]
               .sort((a, b) => a.ecoScore.total - b.ecoScore.total)
               .map(r => (
@@ -751,46 +711,45 @@ export default function MiamiMapExplore() {
                 />
               ))}
 
-            {/* Tap-to-explore hint */}
-            <rect x="80" y="263" width="190" height="11" rx="5.5" fill="rgba(0,0,0,0.35)" />
-            <text x="175" y="271" textAnchor="middle" fontSize="6.5" fontWeight="600" fill="white" style={{ pointerEvents: 'none' }}>
+            <rect x="80" y="263" width="190" height="11" rx="5.5" fill="rgba(0,0,0,0.30)" />
+            <text x="175" y="271" textAnchor="middle" fontSize="6.5" fontWeight="500" fill="white" style={{ pointerEvents: 'none' }}>
               {t('Drag to explore · Tap a pin or zone', 'Arrastra para explorar · Toca un pin')}
             </text>
             </g>
           </svg>
         </div>
 
-        {/* Floating: result count chip (bottom-left) */}
+        {/* Result count chip */}
         <div
           className="absolute left-4 z-30 transition-all duration-300"
-          style={{ bottom: cardVisible ? 288 : 16 }}
+          style={{ bottom: cardVisible ? 260 : 16 }}
         >
-          <span className="bg-white/95 backdrop-blur-sm text-gray-700 text-xs font-bold px-3 py-1.5 rounded-full shadow border border-white/60">
+          <span className="bg-white/90 backdrop-blur-sm text-gray-600 text-xs font-medium px-3 py-1.5 rounded-full shadow-sm border border-white/60">
             {filtered.length} {t('spots', 'lugares')}
           </span>
         </div>
 
-        {/* Floating: List pill button (bottom-right) — matches reference */}
+        {/* List / Map toggle button */}
         <div
           className="absolute right-4 z-30 transition-all duration-300"
-          style={{ bottom: cardVisible ? 288 : 16 }}
+          style={{ bottom: cardVisible ? 260 : 16 }}
         >
           <button
             onClick={e => { e.stopPropagation(); setShowListView(v => !v); setSelectedRestaurant(null) }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-full shadow-lg font-bold text-sm transition-all active:scale-95 ${
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full shadow font-semibold text-sm transition-all active:scale-95 ${
               showListView
                 ? 'bg-gray-800 text-white'
                 : 'bg-green-600 text-white hover:bg-green-700'
             }`}
           >
             {showListView
-              ? <><MapIcon size={15} />{t('Map', 'Mapa')}</>
-              : <><List size={15} />{t('List', 'Lista')}</>
+              ? <><MapIcon size={14} />{t('Map', 'Mapa')}</>
+              : <><List size={14} />{t('List', 'Lista')}</>
             }
           </button>
         </div>
 
-        {/* ── Preview card (slides up on pin select) ── */}
+        {/* Preview card */}
         <div
           className="absolute left-0 right-0 bottom-0 z-30 transition-transform duration-300 ease-out"
           style={{ transform: cardVisible ? 'translateY(0)' : 'translateY(110%)' }}
@@ -808,18 +767,18 @@ export default function MiamiMapExplore() {
           )}
         </div>
 
-        {/* ── List view panel ── */}
+        {/* List view panel */}
         <div
-          className="absolute left-0 right-0 bottom-0 z-40 bg-white rounded-t-3xl shadow-2xl flex flex-col transition-transform duration-300 ease-out"
+          className="absolute left-0 right-0 bottom-0 z-40 bg-white rounded-t-2xl shadow-xl flex flex-col transition-transform duration-300 ease-out"
           style={{ top: 0, transform: showListView ? 'translateY(0)' : 'translateY(100%)' }}
           onClick={e => e.stopPropagation()}
         >
           {/* Handle + header */}
           <div className="px-4 pt-3 pb-2 border-b border-gray-100 flex-shrink-0">
-            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-3" />
+            <div className="w-8 h-1 bg-gray-200 rounded-full mx-auto mb-3" />
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="font-black text-gray-900 text-base">
+                <h2 className="font-bold text-gray-900">
                   {t('Restaurants', 'Restaurantes')}
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
@@ -829,7 +788,7 @@ export default function MiamiMapExplore() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowSortPanel(v => !v)}
-                  className="flex items-center gap-1.5 text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-full"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 border border-green-100 px-3 py-1.5 rounded-full"
                 >
                   <ArrowUpDown size={11} />
                   {sortLabel(sortBy)}
@@ -850,7 +809,7 @@ export default function MiamiMapExplore() {
                   <button
                     key={s.id}
                     onClick={() => { setSortBy(s.id); setShowSortPanel(false) }}
-                    className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
                       sortBy === s.id
                         ? 'bg-green-600 text-white border-green-600'
                         : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-green-300'
@@ -867,14 +826,14 @@ export default function MiamiMapExplore() {
           <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
             {sorted.length === 0 ? (
               <div className="py-16 text-center">
-                <p className="text-5xl mb-3">🔍</p>
-                <p className="font-bold text-gray-700 text-base">{t('No restaurants match', 'Sin resultados')}</p>
+                <p className="text-4xl mb-3">🔍</p>
+                <p className="font-semibold text-gray-700">{t('No restaurants match', 'Sin resultados')}</p>
                 <p className="text-sm text-gray-400 mt-1">
                   {t('Try adjusting your filters', 'Intenta ajustar los filtros')}
                 </p>
                 <button
                   onClick={() => { setActiveCuisine('all'); setActiveEcoFilter('all'); setActiveNeighborhood('All'); setSearchQuery('') }}
-                  className="mt-4 px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-full"
+                  className="mt-4 px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-full"
                 >
                   {t('Clear filters', 'Limpiar filtros')}
                 </button>

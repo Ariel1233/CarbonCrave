@@ -9,7 +9,6 @@ export type Neighborhood =
   | 'Little Haiti'
   | 'Wynwood'
   | 'Overtown'
-  | 'South Beach'
   | 'Coral Gables'
 
 export interface Review {
@@ -65,6 +64,7 @@ export interface Restaurant {
   sustainableActionsEs: string[]
   ownerStory: string
   ownerStoryEs: string
+  image?: string
   trending?: boolean
   risingGreenStar?: boolean
 }

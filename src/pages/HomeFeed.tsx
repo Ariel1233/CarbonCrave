@@ -64,42 +64,38 @@ function VideoCard({ restaurant, isActive }: { restaurant: Restaurant; isActive:
         isActive ? 'opacity-100' : 'opacity-60'
       }`}
     >
-      {/* Video placeholder */}
+      {/* Background */}
       <div className={`absolute inset-0 bg-gradient-to-b ${restaurant.videoColor} to-black`}>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-8xl opacity-20">{emoji}</span>
-        </div>
-        {/* Animated play indicator */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-sm rounded-full p-5 border border-white/20">
-          <span className="text-5xl">{emoji}</span>
+          <span className="text-9xl opacity-10 select-none">{emoji}</span>
         </div>
       </div>
 
       {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/15 to-transparent" />
 
       {/* Content overlay */}
       <div className="absolute bottom-0 left-0 right-0 p-4 pb-6 text-white">
         {/* Tags row */}
         <div className="flex flex-wrap gap-1.5 mb-3">
           {restaurant.trending && (
-            <span className="flex items-center gap-1 bg-orange-500/90 backdrop-blur text-white text-xs font-bold px-2 py-0.5 rounded-full">
+            <span className="flex items-center gap-1 bg-orange-500/85 text-white text-xs font-medium px-2.5 py-1 rounded-full">
               <TrendingUp size={10} />
               {t('Trending', 'Tendencia')}
             </span>
           )}
           {restaurant.risingGreenStar && (
-            <span className="flex items-center gap-1 bg-green-500/90 backdrop-blur text-white text-xs font-bold px-2 py-0.5 rounded-full">
+            <span className="flex items-center gap-1 bg-green-500/85 text-white text-xs font-medium px-2.5 py-1 rounded-full">
               <Leaf size={10} />
               {t('Rising Green Star', 'Estrella Verde')}
             </span>
           )}
         </div>
 
-        {/* Restaurant name and neighborhood */}
-        <h2 className="text-2xl font-black leading-tight mb-1">{restaurant.name}</h2>
-        <div className="flex items-center gap-1 text-white/80 text-sm mb-2">
-          <MapPin size={12} />
+        {/* Restaurant name and info */}
+        <h2 className="text-2xl font-bold leading-tight mb-1">{restaurant.name}</h2>
+        <div className="flex items-center gap-1 text-white/75 text-sm mb-2">
+          <MapPin size={11} />
           <span>{restaurant.neighborhood}</span>
           <span className="mx-1">·</span>
           <span>{cuisine}</span>
@@ -108,42 +104,40 @@ function VideoCard({ restaurant, isActive }: { restaurant: Restaurant; isActive:
         </div>
 
         {/* Featured dish */}
-        <p className="text-white/90 text-sm mb-3">
+        <p className="text-white/85 text-sm mb-3">
           {emoji} {t('Try: ', 'Prueba: ')}<span className="font-semibold">{featuredDish}</span>
         </p>
 
         {/* Description */}
-        <p className="text-white/70 text-xs mb-4 line-clamp-2">{description}</p>
+        <p className="text-white/60 text-xs mb-4 line-clamp-2 leading-relaxed">{description}</p>
 
         {/* Stats row */}
         <div className="flex items-center gap-3 mb-4">
           <div className="flex items-center gap-1">
-            <Star size={14} className="text-yellow-400 fill-yellow-400" />
-            <span className="font-bold text-sm">{restaurant.rating}</span>
-            <span className="text-white/60 text-xs">({restaurant.reviewCount})</span>
+            <Star size={13} className="text-yellow-400 fill-yellow-400" />
+            <span className="font-semibold text-sm">{restaurant.rating}</span>
+            <span className="text-white/50 text-xs">({restaurant.reviewCount})</span>
           </div>
           <div className={`flex items-center gap-1 ${ecoColor}`}>
-            <span className="font-bold text-sm">EcoScore {restaurant.ecoScore.total}</span>
+            <span className="font-semibold text-sm">EcoScore {restaurant.ecoScore.total}</span>
           </div>
-          <div>
-            <EcoBadge badge={restaurant.badge} lang={lang} size="sm" />
-          </div>
+          <EcoBadge badge={restaurant.badge} lang={lang} size="sm" />
         </div>
 
         {/* Action buttons */}
         <div className="grid grid-cols-4 gap-2">
           <Link
             to={`/restaurant/${restaurant.id}`}
-            className="col-span-2 bg-green-500 hover:bg-green-400 text-white font-bold text-sm py-2.5 rounded-xl text-center transition-colors"
+            className="col-span-2 bg-green-600 hover:bg-green-500 active:bg-green-700 text-white font-semibold text-sm py-2.5 rounded-xl text-center transition-colors"
           >
             {t('View Menu', 'Ver Menú')}
           </Link>
           <button
             onClick={() => setSaved(!saved)}
-            className={`flex items-center justify-center gap-1 font-semibold text-sm py-2.5 rounded-xl border transition-colors ${
+            className={`flex items-center justify-center gap-1 font-medium text-sm py-2.5 rounded-xl border transition-colors ${
               saved
                 ? 'bg-yellow-400/20 border-yellow-400 text-yellow-400'
-                : 'bg-white/10 border-white/30 text-white hover:bg-white/20'
+                : 'bg-white/10 border-white/25 text-white hover:bg-white/20'
             }`}
             aria-label={saved ? t('Unsave', 'Eliminar guardado') : t('Save', 'Guardar')}
           >
@@ -153,7 +147,7 @@ function VideoCard({ restaurant, isActive }: { restaurant: Restaurant; isActive:
             href={`https://maps.google.com/?q=${encodeURIComponent(restaurant.address)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1 bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold text-sm py-2.5 rounded-xl transition-colors"
+            className="flex items-center justify-center gap-1 bg-white/10 hover:bg-white/20 border border-white/25 text-white font-medium text-sm py-2.5 rounded-xl transition-colors"
             aria-label={t('Get Directions', 'Obtener Direcciones')}
           >
             <Navigation size={14} />
@@ -167,10 +161,10 @@ function VideoCard({ restaurant, isActive }: { restaurant: Restaurant; isActive:
           to={`/restaurant/${restaurant.id}#reviews`}
           className="flex flex-col items-center gap-1 text-white"
         >
-          <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center">
-            <MessageSquare size={18} />
+          <div className="w-10 h-10 bg-white/15 backdrop-blur rounded-full flex items-center justify-center">
+            <MessageSquare size={17} />
           </div>
-          <span className="text-xs text-white/80">{restaurant.reviewCount}</span>
+          <span className="text-xs text-white/70">{restaurant.reviewCount}</span>
         </Link>
       </div>
     </div>
@@ -195,15 +189,15 @@ export default function HomeFeed() {
   return (
     <div className="flex flex-col h-screen bg-black">
       {/* Neighborhood filter bar */}
-      <div className="fixed top-[57px] left-0 right-0 z-40 bg-black/80 backdrop-blur-sm">
+      <div className="fixed top-[57px] left-0 right-0 z-40 bg-black/75 backdrop-blur-sm">
         <div className="max-w-lg mx-auto px-3 py-2">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
             <button
               onClick={() => { setSelectedNeighborhood('All'); setActiveIndex(0) }}
-              className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+              className={`flex-shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
                 selectedNeighborhood === 'All'
-                  ? 'bg-green-500 text-white border-green-500'
-                  : 'bg-transparent text-white/70 border-white/30 hover:border-white/60'
+                  ? 'bg-green-600 text-white border-green-600'
+                  : 'bg-transparent text-white/65 border-white/25 hover:border-white/50'
               }`}
             >
               {t('All Miami', 'Todo Miami')}
@@ -212,10 +206,10 @@ export default function HomeFeed() {
               <button
                 key={n}
                 onClick={() => { setSelectedNeighborhood(n); setActiveIndex(0) }}
-                className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors whitespace-nowrap ${
+                className={`flex-shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors whitespace-nowrap ${
                   selectedNeighborhood === n
-                    ? 'bg-green-500 text-white border-green-500'
-                    : 'bg-transparent text-white/70 border-white/30 hover:border-white/60'
+                    ? 'bg-green-600 text-white border-green-600'
+                    : 'bg-transparent text-white/65 border-white/25 hover:border-white/50'
                 }`}
               >
                 {n}
@@ -234,7 +228,7 @@ export default function HomeFeed() {
             <div className="flex items-center justify-center h-full text-white/60 text-center px-8">
               <div>
                 <p className="text-4xl mb-3">🌿</p>
-                <p className="font-semibold">{t('No restaurants in this neighborhood yet.', 'No hay restaurantes en este barrio todavía.')}</p>
+                <p className="font-medium">{t('No restaurants in this neighborhood yet.', 'No hay restaurantes en este barrio todavía.')}</p>
               </div>
             </div>
           )}
@@ -269,7 +263,7 @@ export default function HomeFeed() {
                   key={i}
                   onClick={() => setActiveIndex(i)}
                   className={`w-1.5 rounded-full transition-all ${
-                    i === activeIndex ? 'h-6 bg-green-400' : 'h-1.5 bg-white/30'
+                    i === activeIndex ? 'h-6 bg-green-400' : 'h-1.5 bg-white/25'
                   }`}
                   aria-label={`${t('Restaurant', 'Restaurante')} ${i + 1}`}
                 />
@@ -282,7 +276,7 @@ export default function HomeFeed() {
       {/* Counter */}
       {filtered.length > 0 && (
         <div className="fixed top-[97px] right-4 z-40">
-          <span className="text-white/60 text-xs">
+          <span className="text-white/50 text-xs">
             {activeIndex + 1}/{filtered.length}
           </span>
         </div>

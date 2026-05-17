@@ -6,7 +6,7 @@ const config: Record<EcoBadgeType, { label: string; labelEs: string; color: stri
     labelEs: 'Hoja Platino',
     color: 'text-cyan-700',
     bg: 'bg-cyan-50',
-    border: 'border-cyan-300',
+    border: 'border-cyan-200',
     icon: '🌿',
   },
   gold: {
@@ -14,7 +14,7 @@ const config: Record<EcoBadgeType, { label: string; labelEs: string; color: stri
     labelEs: 'Hoja de Oro',
     color: 'text-yellow-700',
     bg: 'bg-yellow-50',
-    border: 'border-yellow-300',
+    border: 'border-yellow-200',
     icon: '🍃',
   },
   silver: {
@@ -22,7 +22,7 @@ const config: Record<EcoBadgeType, { label: string; labelEs: string; color: stri
     labelEs: 'Hoja de Plata',
     color: 'text-slate-600',
     bg: 'bg-slate-50',
-    border: 'border-slate-300',
+    border: 'border-slate-200',
     icon: '🌱',
   },
   bronze: {
@@ -55,13 +55,13 @@ export default function EcoBadge({ badge, lang = 'en', size = 'md' }: Props) {
 
   const sizeClasses = {
     sm: 'text-xs px-2 py-0.5 gap-1',
-    md: 'text-sm px-3 py-1 gap-1.5',
-    lg: 'text-base px-4 py-1.5 gap-2',
+    md: 'text-sm px-2.5 py-1 gap-1.5',
+    lg: 'text-sm px-3 py-1.5 gap-2',
   }
 
   return (
     <span
-      className={`inline-flex items-center font-semibold rounded-full border ${c.color} ${c.bg} ${c.border} ${sizeClasses[size]}`}
+      className={`inline-flex items-center font-medium rounded-full border ${c.color} ${c.bg} ${c.border} ${sizeClasses[size]}`}
     >
       <span>{c.icon}</span>
       <span>{label}</span>
