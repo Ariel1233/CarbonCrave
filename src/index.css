@@ -41,6 +41,116 @@ html { scroll-behavior: smooth; }
 }
 .pin-pulse { animation: pinPulse 1.4s ease-out infinite; }
 
+/* Badge reveal */
+@keyframes badgeReveal {
+  from { opacity: 0; transform: scale(0.8) translateY(5px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.badge-reveal { animation: badgeReveal 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+/* Hero media fade-in */
+@keyframes heroFadeIn {
+  from { opacity: 0; transform: scale(1.04); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.hero-fade-in { animation: heroFadeIn 0.75s ease-out forwards; }
+
+/* Leaderboard rank rise (staggered via animation-delay on element) */
+@keyframes rankRise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rank-rise { animation: rankRise 0.4s ease-out both; }
+
+/* Eco breakdown row stagger */
+@keyframes ecoReveal {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.eco-reveal { animation: ecoReveal 0.4s ease-out both; }
+
+/* Review slide-in */
+@keyframes reviewSlide {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.review-slide { animation: reviewSlide 0.45s ease-out both; }
+
+/* Tab content transitions */
+@keyframes tabSlideInRight {
+  from { opacity: 0; transform: translateX(22px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes tabSlideInLeft {
+  from { opacity: 0; transform: translateX(-22px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.tab-slide-right { animation: tabSlideInRight 0.3s ease-out both; }
+.tab-slide-left  { animation: tabSlideInLeft  0.3s ease-out both; }
+
+/* Directions button pulse */
+@keyframes directionsPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.45); }
+  70%  { box-shadow: 0 0 0 12px rgba(22, 163, 74, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+}
+.directions-pulse { animation: directionsPulse 2.2s ease-out infinite; }
+
+/* Upload scan line */
+@keyframes scanLine {
+  0%   { top: -2px; opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+.scan-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #22c55e 50%, transparent 100%);
+  animation: scanLine 1.3s ease-in-out forwards;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Receipt / upload icon fly-in */
+@keyframes receiptFlyIn {
+  from { opacity: 0; transform: translateY(-20px) scale(0.8); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.receipt-fly-in { animation: receiptFlyIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+/* EcoScore update flash */
+@keyframes scoreUpdate {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.22); color: #22c55e; }
+  100% { transform: scale(1); }
+}
+.score-update { animation: scoreUpdate 0.55s ease-out forwards; }
+
+/* Improvement indicator enter */
+@keyframes improvementIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.improvement-in { animation: improvementIn 0.5s ease-out both; }
+
+/* Waste chart bar grow from bottom */
+@keyframes barGrowUp {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+.bar-grow {
+  transform-origin: bottom;
+  animation: barGrowUp 0.65s ease-out both;
+}
+
+/* Offset option selection scale pop */
+@keyframes offsetPop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.025); }
+  100% { transform: scale(1); }
+}
+.offset-pop { animation: offsetPop 0.3s ease-out forwards; }
+
 /* Base */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto,

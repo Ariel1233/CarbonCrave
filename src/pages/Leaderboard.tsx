@@ -15,19 +15,26 @@ export default function Leaderboard() {
   return (
     <div className="min-h-screen bg-[#f5f5f7] pt-14 pb-20">
       <div className="max-w-lg mx-auto px-4 pt-5">
+
         {/* Header */}
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center gap-2 mb-1 rank-rise" style={{ animationDelay: '0ms' }}>
           <Trophy size={22} className="text-yellow-500" />
           <h1 className="text-2xl font-bold text-gray-900">
             {t('Eco Leaderboard', 'Ranking Ecológico')}
           </h1>
         </div>
-        <p className="text-gray-500 text-sm mb-5">
+        <p
+          className="text-gray-500 text-sm mb-5 rank-rise"
+          style={{ animationDelay: '60ms' }}
+        >
           {t("Miami's most sustainable restaurants, ranked by EcoScore", "Los restaurantes más sostenibles de Miami, clasificados por EcoScore")}
         </p>
 
         {/* Top 3 podium */}
-        <div className="bg-green-800 rounded-2xl p-4 mb-5">
+        <div
+          className="bg-green-800 rounded-2xl p-4 mb-5 rank-rise"
+          style={{ animationDelay: '100ms' }}
+        >
           <p className="text-white/60 font-medium text-xs text-center uppercase tracking-wider mb-3">
             {t('Top 3 This Week', 'Top 3 Esta Semana')}
           </p>
@@ -36,7 +43,8 @@ export default function Leaderboard() {
               <Link
                 key={r.id}
                 to={`/restaurant/${r.id}`}
-                className="flex items-center gap-3 bg-white/10 hover:bg-white/15 rounded-xl px-3.5 py-3 transition-colors"
+                className="rank-rise flex items-center gap-3 bg-white/10 hover:bg-white/15 rounded-xl px-3.5 py-3 transition-colors"
+                style={{ animationDelay: `${160 + i * 80}ms` }}
               >
                 <span className="text-xl w-7 text-center flex-shrink-0">{medalEmojis[i]}</span>
                 <div className="flex-1 min-w-0">
@@ -46,7 +54,7 @@ export default function Leaderboard() {
                 <div className="text-right flex-shrink-0">
                   <div className="text-white font-bold text-xl leading-none">{r.ecoScore.total}</div>
                   <div className="mt-1">
-                    <EcoBadge badge={r.badge} lang={lang} size="sm" />
+                    <EcoBadge badge={r.badge} lang={lang} size="sm" animate />
                   </div>
                 </div>
               </Link>
@@ -56,7 +64,10 @@ export default function Leaderboard() {
 
         {/* Highlight cards */}
         <div className="grid grid-cols-2 gap-2.5 mb-5">
-          <div className="bg-white border border-gray-100 rounded-2xl p-3.5">
+          <div
+            className="bg-white border border-gray-100 rounded-2xl p-3.5 rank-rise"
+            style={{ animationDelay: '420ms' }}
+          >
             <p className="text-[11px] text-sky-600 font-medium mb-1">
               {t('Most Carbon Offset', 'Más Compensación')}
             </p>
@@ -70,7 +81,10 @@ export default function Leaderboard() {
               )
             })()}
           </div>
-          <div className="bg-white border border-gray-100 rounded-2xl p-3.5">
+          <div
+            className="bg-white border border-gray-100 rounded-2xl p-3.5 rank-rise"
+            style={{ animationDelay: '480ms' }}
+          >
             <p className="text-[11px] text-amber-600 font-medium mb-1">
               {t('Least Food Waste', 'Menos Desperdicio')}
             </p>
@@ -87,7 +101,10 @@ export default function Leaderboard() {
         </div>
 
         {/* Full ranking */}
-        <h2 className="font-semibold text-gray-900 text-base mb-3">
+        <h2
+          className="font-semibold text-gray-900 text-base mb-3 rank-rise"
+          style={{ animationDelay: '540ms' }}
+        >
           {t('Full Ranking', 'Clasificación Completa')}
         </h2>
         <div className="space-y-2">
@@ -97,9 +114,10 @@ export default function Leaderboard() {
               <Link
                 key={r.id}
                 to={`/restaurant/${r.id}`}
-                className={`flex items-center gap-3 bg-white rounded-2xl p-3 border transition-all hover:shadow-sm ${
+                className={`rank-rise flex items-center gap-3 bg-white rounded-2xl p-3 border transition-all hover:shadow-sm hover:-translate-y-px ${
                   isTop3 ? 'border-amber-100 bg-amber-50/40' : 'border-gray-100'
                 }`}
+                style={{ animationDelay: `${580 + i * 55}ms` }}
               >
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
@@ -141,17 +159,20 @@ export default function Leaderboard() {
         </div>
 
         {/* Score legend */}
-        <div className="mt-5 bg-white rounded-2xl p-4 border border-gray-100">
+        <div
+          className="mt-5 bg-white rounded-2xl p-4 border border-gray-100 rank-rise"
+          style={{ animationDelay: `${580 + sorted.length * 55}ms` }}
+        >
           <h3 className="font-semibold text-gray-900 text-sm mb-3">
             {t('EcoScore Tiers', 'Niveles de EcoScore')}
           </h3>
           <div className="space-y-2">
             {[
-              { range: '90–100', label: t('Platinum Leaf', 'Hoja Platino'), icon: '🌿' },
-              { range: '75–89',  label: t('Gold Leaf',     'Hoja de Oro'),  icon: '🍃' },
-              { range: '60–74',  label: t('Silver Leaf',   'Hoja de Plata'), icon: '🌱' },
-              { range: '40–59',  label: t('Bronze Leaf',   'Hoja de Bronce'), icon: '🌾' },
-              { range: 'Under 40', label: t('Starter Leaf', 'Hoja Inicial'), icon: '🪴' },
+              { range: '90–100',   label: t('Platinum Leaf', 'Hoja Platino'),  icon: '🌿' },
+              { range: '75–89',    label: t('Gold Leaf',     'Hoja de Oro'),   icon: '🍃' },
+              { range: '60–74',    label: t('Silver Leaf',   'Hoja de Plata'), icon: '🌱' },
+              { range: '40–59',    label: t('Bronze Leaf',   'Hoja de Bronce'), icon: '🌾' },
+              { range: 'Under 40', label: t('Starter Leaf',  'Hoja Inicial'),  icon: '🪴' },
             ].map((tier) => (
               <div key={tier.range} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
@@ -163,6 +184,7 @@ export default function Leaderboard() {
             ))}
           </div>
         </div>
+
       </div>
     </div>
   )

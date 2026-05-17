@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Upload, TrendingDown, TrendingUp, Leaf,
-  DollarSign, AlertCircle, CheckCircle, BarChart3,
+  DollarSign, AlertCircle, CheckCircle, BarChart3, ScanLine,
 } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import EcoBadge from '../components/EcoBadge'
 import EcoScoreBar from '../components/EcoScoreBar'
+import EcoRing from '../components/EcoRing'
+import { useCountUp } from '../hooks/useCountUp'
 
 const mockRestaurant = {
   name: 'Verde Havana',
@@ -36,13 +38,31 @@ const wasteHistory = [
   { week: 'May 12', pct: 7  },
 ]
 
+type UploadPhase = 'idle' | 'scanning' | 'success'
+
 export default function RestaurantDashboard() {
   const { lang, t } = useLanguage()
-  const [selectedOffset, setSelectedOffset]       = useState(1)
-  const [wastePct, setWastePct]                   = useState(7)
-  const [showUploadSuccess, setShowUploadSuccess] = useState(false)
+  const [selectedOffset, setSelectedOffset] = useState(1)
+  const [prevOffset, setPrevOffset]         = useState(1)
+  const [wastePct, setWastePct]             = useState(7)
+  const [wasteBreakdown, setWasteBreakdown] = useState({ thrown: 0, donated: 0, composted: 0, sold: 0 })
+  const [uploadPhase, setUploadPhase]       = useState<UploadPhase>('idle')
+  const [scanningItem, setScanningItem]     = useState<string | null>(null)
+  const [scoreFlashKey, setScoreFlashKey]   = useState(0)
+  const [chartVisible, setChartVisible]     = useState(false)
 
   const { ecoScore } = mockRestaurant
+
+  /* trigger chart bar animation on mount */
+  useEffect(() => {
+    const t = setTimeout(() => setChartVisible(true), 200)
+    return () => clearTimeout(t)
+  }, [])
+
+  const totalBreakdownKg = wasteBreakdown.thrown + wasteBreakdown.donated + wasteBreakdown.composted + wasteBreakdown.sold
+  const positiveKg       = wasteBreakdown.donated + wasteBreakdown.composted + wasteBreakdown.sold
+  const reuseRatio       = totalBreakdownKg > 0 ? positiveKg / totalBreakdownKg : 0
+  const reuseBonus       = reuseRatio >= 0.8 ? 5 : reuseRatio >= 0.6 ? 3 : reuseRatio >= 0.4 ? 2 : 0
 
   const simulatedScore = Math.min(
     100,
@@ -50,7 +70,8 @@ export default function RestaurantDashboard() {
       offsetOptions[selectedOffset].points +
       (wastePct < 5 ? 25 : wastePct < 10 ? 20 : wastePct < 20 ? 15 : 10) +
       ecoScore.sustainabilityScore +
-      ecoScore.transparencyScore,
+      ecoScore.transparencyScore +
+      reuseBonus,
   )
 
   const simulatedBadge =
@@ -60,39 +81,77 @@ export default function RestaurantDashboard() {
     : simulatedScore >= 40 ? 'bronze'
     : 'starter'
 
-  const handleUpload = () => {
-    setShowUploadSuccess(true)
-    setTimeout(() => setShowUploadSuccess(false), 3000)
+  const handleUpload = (label: string) => {
+    if (uploadPhase !== 'idle') return
+    setScanningItem(label)
+    setUploadPhase('scanning')
+    setTimeout(() => {
+      setUploadPhase('success')
+      setScoreFlashKey((k) => k + 1)
+      setTimeout(() => {
+        setUploadPhase('idle')
+        setScanningItem(null)
+      }, 2600)
+    }, 1800)
+  }
+
+  const handleOffsetSelect = (i: number) => {
+    setPrevOffset(selectedOffset)
+    setSelectedOffset(i)
   }
 
   const maxWaste = Math.max(...wasteHistory.map((w) => w.pct))
 
+  /* count-up for hero score and emissions */
+  const heroScore      = useCountUp(ecoScore.total,          1300, 200)
+  const displayedCO2   = useCountUp(ecoScore.weeklyEmissions, 1200, 400)
+
+  /* score breakdown stagger */
+  const breakdownRows = [
+    { label: t('Carbon Footprint', 'Huella de Carbono'),        value: ecoScore.carbonScore,        max: 30, color: 'bg-green-500',  delay: 100 },
+    { label: t('Carbon Offset', 'Compensación'),                value: ecoScore.offsetScore,        max: 25, color: 'bg-cyan-500',   delay: 200 },
+    { label: t('Food Waste', 'Desperdicio'),                    value: ecoScore.wasteScore,         max: 25, color: 'bg-yellow-500', delay: 300 },
+    { label: t('Sustainable Practices', 'Prácticas Sostenibles'), value: ecoScore.sustainabilityScore, max: 10, color: 'bg-lime-500', delay: 400 },
+    { label: t('Transparency', 'Transparencia'),                value: ecoScore.transparencyScore,  max: 10, color: 'bg-purple-400', delay: 500 },
+  ]
+
   return (
     <div className="min-h-screen bg-[#f5f5f7] pt-14 pb-20">
       <div className="max-w-lg mx-auto px-4 pt-5">
+
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{t('Dashboard', 'Panel')}</h1>
             <p className="text-gray-500 text-sm mt-0.5">{mockRestaurant.name}</p>
           </div>
-          <EcoBadge badge={mockRestaurant.badge} lang={lang} size="md" />
+          <EcoBadge badge={mockRestaurant.badge} lang={lang} size="md" animate />
         </div>
 
         {/* EcoScore hero card */}
         <div className="bg-green-800 rounded-2xl p-4 text-white mb-4">
           <div className="flex items-center justify-between mb-3.5">
-            <div>
-              <p className="text-white/60 text-xs font-medium mb-0.5">
-                {t('Your EcoScore', 'Tu EcoScore')}
-              </p>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-4xl font-bold">{ecoScore.total}</span>
-                <span className="text-white/50 text-lg">/100</span>
+            <div className="flex items-center gap-4">
+              <EcoRing
+                score={ecoScore.total}
+                size={88}
+                strokeWidth={6}
+                delay={300}
+                trackColor="rgba(255,255,255,0.15)"
+                ringColor="rgba(255,255,255,0.9)"
+              />
+              <div>
+                <p className="text-white/60 text-xs font-medium mb-0.5">
+                  {t('Your EcoScore', 'Tu EcoScore')}
+                </p>
+                <div
+                  key={scoreFlashKey}
+                  className={`flex items-baseline gap-1.5 ${scoreFlashKey > 0 ? 'score-update' : ''}`}
+                >
+                  <span className="text-4xl font-bold tabular-nums">{heroScore}</span>
+                  <span className="text-white/50 text-lg">/100</span>
+                </div>
               </div>
-            </div>
-            <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
-              <Leaf size={24} className="text-white" />
             </div>
           </div>
           <div className="bg-white/10 rounded-xl p-3 text-sm">
@@ -116,11 +175,15 @@ export default function RestaurantDashboard() {
             {t('Score Breakdown', 'Desglose de Puntuación')}
           </h2>
           <div className="space-y-3.5">
-            <EcoScoreBar label={t('Carbon Footprint', 'Huella de Carbono')}      value={ecoScore.carbonScore}        max={30} color="bg-green-500" />
-            <EcoScoreBar label={t('Carbon Offset', 'Compensación')}              value={ecoScore.offsetScore}        max={25} color="bg-cyan-500" />
-            <EcoScoreBar label={t('Food Waste', 'Desperdicio')}                  value={ecoScore.wasteScore}         max={25} color="bg-yellow-500" />
-            <EcoScoreBar label={t('Sustainable Practices', 'Prácticas Sostenibles')} value={ecoScore.sustainabilityScore} max={10} color="bg-lime-500" />
-            <EcoScoreBar label={t('Transparency', 'Transparencia')}              value={ecoScore.transparencyScore}  max={10} color="bg-purple-400" />
+            {breakdownRows.map(({ label, value, max, color, delay }) => (
+              <div
+                key={label}
+                className="eco-reveal"
+                style={{ animationDelay: `${delay}ms` }}
+              >
+                <EcoScoreBar label={label} value={value} max={max} color={color} delay={delay} />
+              </div>
+            ))}
           </div>
         </div>
 
@@ -131,7 +194,9 @@ export default function RestaurantDashboard() {
           </h2>
           <div className="bg-gray-50 rounded-xl p-3 mb-4">
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-gray-900">{ecoScore.weeklyEmissions}</span>
+              <span className="text-2xl font-bold text-gray-900 tabular-nums">
+                {displayedCO2}
+              </span>
               <span className="text-gray-500 text-sm">kg CO₂e</span>
             </div>
             <p className="text-xs text-gray-400 mt-0.5">
@@ -146,20 +211,22 @@ export default function RestaurantDashboard() {
             {offsetOptions.map((opt, i) => (
               <button
                 key={opt.pct}
-                onClick={() => setSelectedOffset(i)}
-                className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                onClick={() => handleOffsetSelect(i)}
+                className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all duration-200 ${
                   selectedOffset === i
-                    ? 'border-green-500 bg-green-50'
+                    ? 'border-green-500 bg-green-50 scale-[1.015]'
                     : 'border-gray-100 bg-white hover:border-green-200'
-                }`}
+                } ${selectedOffset === i && prevOffset !== i ? 'offset-pop' : ''}`}
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                       selectedOffset === i ? 'border-green-500' : 'border-gray-300'
                     }`}
                   >
-                    {selectedOffset === i && <div className="w-2.5 h-2.5 bg-green-500 rounded-full" />}
+                    {selectedOffset === i && (
+                      <div className="w-2.5 h-2.5 bg-green-500 rounded-full" />
+                    )}
                   </div>
                   <div className="text-left">
                     <p className="font-medium text-sm text-gray-900">
@@ -173,7 +240,7 @@ export default function RestaurantDashboard() {
             ))}
           </div>
 
-          <button className="mt-4 w-full bg-green-600 text-white font-semibold py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-opacity active:opacity-80">
+          <button className="mt-4 w-full bg-green-600 text-white font-semibold py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-opacity active:opacity-80 hover:bg-green-700">
             <DollarSign size={15} />
             {t('Purchase Offset', 'Comprar Compensación')}
           </button>
@@ -185,28 +252,30 @@ export default function RestaurantDashboard() {
             ♻️ {t('Food Waste Tracker', 'Rastreador de Desperdicio')}
           </h2>
 
-          {/* Chart */}
+          {/* Animated chart */}
           <div className="bg-gray-50 rounded-xl p-3 mb-3.5">
             <p className="text-xs text-gray-500 mb-3">
               {t('Waste % (last 4 weeks)', 'Desperdicio % (últimas 4 semanas)')}
             </p>
-            <div className="flex items-end gap-2 h-14">
-              {wasteHistory.map((w) => (
-                <div key={w.week} className="flex-1 flex flex-col items-center gap-1">
-                  <div className="w-full flex items-end justify-center" style={{ height: '44px' }}>
+            <div className="flex items-end gap-2 h-11">
+              {wasteHistory.map((w, i) => (
+                <div key={w.week} className="flex-1 h-full flex items-end">
+                  {chartVisible && (
                     <div
-                      className="w-full rounded-t-md bg-green-400 transition-all"
-                      style={{ height: `${(w.pct / maxWaste) * 100}%` }}
+                      className="w-full rounded-t-md bg-green-400 bar-grow"
+                      style={{
+                        height: `${(w.pct / maxWaste) * 100}%`,
+                        animationDelay: `${i * 110}ms`,
+                      }}
                     />
-                  </div>
-                  <span className="text-[10px] text-gray-500">{w.pct}%</span>
-                  <span className="text-[10px] text-gray-300">{w.week.split(' ')[1]}</span>
+                  )}
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-green-50 border border-green-100 rounded-xl px-3 py-2 mb-4">
+          {/* Improvement indicator */}
+          <div className="improvement-in flex items-center gap-2 bg-green-50 border border-green-100 rounded-xl px-3 py-2 mb-4">
             <TrendingDown size={14} className="text-green-600" />
             <p className="text-xs text-green-800 font-medium">
               {t('Reduced from 18% to 7% — EcoScore +8 pts!', '¡Reducción del 18% al 7% — EcoScore +8 pts!')}
@@ -235,46 +304,57 @@ export default function RestaurantDashboard() {
             </div>
           </div>
 
-          {/* Waste breakdown inputs */}
+          {/* Waste breakdown inputs — feed into score simulator */}
           <div className="mt-4 grid grid-cols-2 gap-2">
-            {[
-              { icon: '🗑️', label: t('Thrown away', 'Tirado') },
-              { icon: '🤝', label: t('Donated', 'Donado') },
-              { icon: '🌱', label: t('Composted', 'Compostado') },
-              { icon: '🏷️', label: t('Sold at discount', 'Vendido con descuento') },
-            ].map((item) => (
-              <div key={item.label} className="bg-gray-50 rounded-xl p-2.5">
+            {([
+              { icon: '🗑️', label: t('Thrown away', 'Tirado'),           key: 'thrown'   as const },
+              { icon: '🤝', label: t('Donated', 'Donado'),               key: 'donated'  as const },
+              { icon: '🌱', label: t('Composted', 'Compostado'),         key: 'composted' as const },
+              { icon: '🏷️', label: t('Sold at discount', 'Vendido con descuento'), key: 'sold' as const },
+            ] as const).map((item) => (
+              <div key={item.key} className="bg-gray-50 rounded-xl p-2.5">
                 <p className="text-[11px] text-gray-500 mb-1.5">
                   {item.icon} {item.label}
                 </p>
                 <input
                   type="number"
                   placeholder="kg"
+                  value={wasteBreakdown[item.key] || ''}
+                  onChange={(e) =>
+                    setWasteBreakdown((prev) => ({ ...prev, [item.key]: Math.max(0, Number(e.target.value)) }))
+                  }
                   className="w-full text-sm font-medium bg-transparent outline-none text-gray-800 placeholder-gray-300"
                   min={0}
                 />
               </div>
             ))}
           </div>
+          {totalBreakdownKg > 0 && (
+            <p className="mt-2 text-[11px] text-gray-400 text-center">
+              {reuseBonus > 0
+                ? `+${reuseBonus} ${t('bonus pts from reuse ratio', 'pts extra por reutilización')} 🌿`
+                : t('Increase donated / composted / sold to earn bonus pts', 'Aumenta donado/compostado/vendido para puntos extra')}
+            </p>
+          )}
         </div>
 
         {/* Score simulator */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
           <h2 className="font-semibold text-gray-900 text-base mb-2">
-            🎯 {t('Score Simulator', 'Simulador de Puntuación')}
+            {t('Score Simulator', 'Simulador de Puntuación')}
           </h2>
           <p className="text-sm text-gray-500 mb-4">
-            {t('With your current selections:', 'Con tus selecciones actuales:')}
+            {t('Based on your offset, waste %, and breakdown inputs:', 'Según tu compensación, % desperdicio y entradas:')}
           </p>
           <div className="flex items-center justify-between bg-gray-50 rounded-xl p-4 mb-3">
             <div>
               <p className="text-gray-500 text-xs mb-0.5">{t('Projected EcoScore', 'EcoScore Proyectado')}</p>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-green-700">{simulatedScore}</span>
+                <span className="text-3xl font-bold text-green-700 tabular-nums">{simulatedScore}</span>
                 <span className="text-gray-400 text-sm">/100</span>
               </div>
             </div>
-            <EcoBadge badge={simulatedBadge} lang={lang} size="lg" />
+            <EcoBadge badge={simulatedBadge} lang={lang} size="lg" animate />
           </div>
           {simulatedScore > ecoScore.total ? (
             <div className="flex items-center gap-2 text-green-700 bg-green-50 rounded-xl px-3 py-2.5">
@@ -308,21 +388,42 @@ export default function RestaurantDashboard() {
               { icon: '📦', label: t('Supplier Invoices', 'Facturas de Proveedores') },
               { icon: '♻️', label: t('Waste Log (PDF or photo)', 'Registro de Desperdicio (PDF o foto)') },
               { icon: '🍽️', label: t('Menu Item Recipes', 'Recetas del Menú') },
-            ].map((item) => (
-              <button
-                key={item.label}
-                onClick={handleUpload}
-                className="w-full flex items-center gap-3 border border-dashed border-gray-200 hover:border-green-400 hover:bg-green-50 rounded-xl p-3 text-left transition-all group"
-              >
-                <span className="text-xl">{item.icon}</span>
-                <span className="flex-1 text-sm text-gray-600 group-hover:text-green-700">{item.label}</span>
-                <Upload size={14} className="text-gray-300 group-hover:text-green-500" />
-              </button>
-            ))}
+            ].map((item) => {
+              const isScanning = scanningItem === item.label && uploadPhase === 'scanning'
+              return (
+                <button
+                  key={item.label}
+                  onClick={() => handleUpload(item.label)}
+                  disabled={uploadPhase !== 'idle'}
+                  className={`w-full relative flex items-center gap-3 border border-dashed rounded-xl p-3 text-left transition-all overflow-hidden group ${
+                    isScanning
+                      ? 'border-green-400 bg-green-50 cursor-wait'
+                      : uploadPhase !== 'idle'
+                      ? 'border-gray-200 opacity-50 cursor-not-allowed'
+                      : 'border-gray-200 hover:border-green-400 hover:bg-green-50'
+                  }`}
+                >
+                  <span className={`text-xl ${isScanning ? 'receipt-fly-in' : ''}`}>
+                    {item.icon}
+                  </span>
+                  <span className={`flex-1 text-sm group-hover:text-green-700 transition-colors ${isScanning ? 'text-green-700 font-medium' : 'text-gray-600'}`}>
+                    {item.label}
+                  </span>
+                  {isScanning ? (
+                    <ScanLine size={14} className="text-green-500 animate-pulse" />
+                  ) : (
+                    <Upload size={14} className="text-gray-300 group-hover:text-green-500 transition-colors" />
+                  )}
+
+                  {/* Scan line overlay */}
+                  {isScanning && <div className="scan-line" />}
+                </button>
+              )
+            })}
           </div>
 
-          {showUploadSuccess && (
-            <div className="mt-3 flex items-center gap-2 bg-green-50 border border-green-100 rounded-xl px-3 py-2.5 text-green-700">
+          {uploadPhase === 'success' && (
+            <div className="mt-3 improvement-in flex items-center gap-2 bg-green-50 border border-green-100 rounded-xl px-3 py-2.5 text-green-700">
               <CheckCircle size={14} />
               <p className="text-sm font-medium">
                 {t('Upload successful! Score updated.', '¡Carga exitosa! Puntuación actualizada.')}
@@ -345,12 +446,13 @@ export default function RestaurantDashboard() {
                   'Publica comidas con descuento cerca del cierre para reducir desperdicios y ganar puntos.',
                 )}
               </p>
-              <button className="bg-orange-500 text-white font-semibold text-sm px-4 py-2 rounded-xl transition-opacity active:opacity-80">
+              <button className="bg-orange-500 text-white font-semibold text-sm px-4 py-2 rounded-xl transition-opacity active:opacity-80 hover:bg-orange-600">
                 {t('Post a Last-Call Deal', 'Publicar una Oferta de Último Minuto')}
               </button>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   )

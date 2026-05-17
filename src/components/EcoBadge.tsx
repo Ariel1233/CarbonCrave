@@ -47,9 +47,10 @@ interface Props {
   badge: EcoBadgeType
   lang?: 'en' | 'es'
   size?: 'sm' | 'md' | 'lg'
+  animate?: boolean
 }
 
-export default function EcoBadge({ badge, lang = 'en', size = 'md' }: Props) {
+export default function EcoBadge({ badge, lang = 'en', size = 'md', animate = false }: Props) {
   const c = config[badge]
   const label = lang === 'es' ? c.labelEs : c.label
 
@@ -61,7 +62,7 @@ export default function EcoBadge({ badge, lang = 'en', size = 'md' }: Props) {
 
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-full border ${c.color} ${c.bg} ${c.border} ${sizeClasses[size]}`}
+      className={`inline-flex items-center font-medium rounded-full border ${c.color} ${c.bg} ${c.border} ${sizeClasses[size]}${animate ? ' badge-reveal' : ''}`}
     >
       <span>{c.icon}</span>
       <span>{label}</span>
