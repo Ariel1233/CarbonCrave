@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Search, X, Star, Navigation2, Heart, List,
@@ -394,6 +394,49 @@ export default function MiamiMapExplore() {
   const [showFilterSheet, setShowFilterSheet]       = useState(false)
   const [showSortPanel, setShowSortPanel]           = useState(false)
 
+  // ─── Map pan state ────────────────────────────────────────────────────────
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging]                 = useState(false)
+  const svgRef                                       = useRef<SVGSVGElement>(null)
+  const dragRef                                      = useRef<{
+    startX: number; startY: number; panX: number; panY: number; moved: boolean
+  } | null>(null)
+  const didDragRef                                   = useRef(false)
+
+  const PAN_X_MIN = -65   // drag left → reveals South Beach
+  const PAN_X_MAX = 15    // drag right → reveals Doral edge
+  const PAN_Y_MIN = -20
+  const PAN_Y_MAX = 20
+
+  const startDrag = (clientX: number, clientY: number) => {
+    dragRef.current = { startX: clientX, startY: clientY, panX: panOffset.x, panY: panOffset.y, moved: false }
+    setIsDragging(true)
+    didDragRef.current = false
+  }
+
+  const moveDrag = (clientX: number, clientY: number) => {
+    if (!dragRef.current || !svgRef.current) return
+    const dx = clientX - dragRef.current.startX
+    const dy = clientY - dragRef.current.startY
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+      dragRef.current.moved = true
+      didDragRef.current = true
+    }
+    const rect = svgRef.current.getBoundingClientRect()
+    const scaleX = 350 / rect.width
+    const scaleY = 276 / rect.height
+    setPanOffset({
+      x: Math.max(PAN_X_MIN, Math.min(PAN_X_MAX, dragRef.current.panX + dx * scaleX)),
+      y: Math.max(PAN_Y_MIN, Math.min(PAN_Y_MAX, dragRef.current.panY + dy * scaleY)),
+    })
+  }
+
+  const endDrag = () => {
+    dragRef.current = null
+    setIsDragging(false)
+    setTimeout(() => { didDragRef.current = false }, 50)
+  }
+
   const cuisines = useMemo(() => {
     const seen = new Set<string>()
     restaurants.forEach(r => seen.add(lang === 'es' ? r.cuisineEs : r.cuisine))
@@ -476,8 +519,11 @@ export default function MiamiMapExplore() {
 
   return (
     <div
-      className="fixed left-0 right-0 overflow-hidden bg-[#5fbfcf]"
+      className="fixed left-0 right-0 bg-gray-200 flex justify-center"
       style={{ top: 56, bottom: 52 }}
+    >
+    <div
+      className="relative w-full max-w-xl overflow-hidden bg-[#5fbfcf] shadow-2xl"
       onClick={closeAll}
     >
       {/* ─── Search + filter bar ──────────────────────────────────────────── */}
@@ -636,11 +682,21 @@ export default function MiamiMapExplore() {
         {/* SVG map fills container */}
         <div className="absolute inset-0 flex items-start justify-center pt-0">
           <svg
+            ref={svgRef}
             viewBox={MAP_VB}
             className="w-full h-full"
             preserveAspectRatio="xMidYMid slice"
-            style={{ display: 'block' }}
+            style={{ display: 'block', cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none' }}
+            onMouseDown={e => { e.preventDefault(); startDrag(e.clientX, e.clientY) }}
+            onMouseMove={e => moveDrag(e.clientX, e.clientY)}
+            onMouseUp={endDrag}
+            onMouseLeave={endDrag}
+            onTouchStart={e => startDrag(e.touches[0].clientX, e.touches[0].clientY)}
+            onTouchMove={e => { e.preventDefault(); moveDrag(e.touches[0].clientX, e.touches[0].clientY) }}
+            onTouchEnd={endDrag}
+            onClickCapture={e => { if (didDragRef.current) { e.stopPropagation(); e.preventDefault() } }}
           >
+            <g transform={`translate(${panOffset.x} ${panOffset.y})`}>
             {/* ── Real Miami map photograph as base layer ── */}
             <image
               href="/miami-map.png"
@@ -698,8 +754,9 @@ export default function MiamiMapExplore() {
             {/* Tap-to-explore hint */}
             <rect x="80" y="263" width="190" height="11" rx="5.5" fill="rgba(0,0,0,0.35)" />
             <text x="175" y="271" textAnchor="middle" fontSize="6.5" fontWeight="600" fill="white" style={{ pointerEvents: 'none' }}>
-              {t('Tap a pin or zone to explore', 'Toca un pin o zona para explorar')}
+              {t('Drag to explore · Tap a pin or zone', 'Arrastra para explorar · Toca un pin')}
             </text>
+            </g>
           </svg>
         </div>
 
@@ -837,6 +894,7 @@ export default function MiamiMapExplore() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   )
 }
