@@ -9,6 +9,7 @@ export type Neighborhood =
   | 'Little Haiti'
   | 'Wynwood'
   | 'Overtown'
+  | 'South Beach'
   | 'Coral Gables'
 
 export interface Review {

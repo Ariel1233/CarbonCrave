@@ -54,7 +54,16 @@ export default function RestaurantProfile() {
     <div className="min-h-screen bg-[#f5f5f7] pt-14 pb-20">
       {/* Hero */}
       <div className={`relative h-52 bg-gradient-to-b ${restaurant.videoColor} overflow-hidden`}>
-        {restaurant.image ? (
+        {restaurant.videoThumb ? (
+          <video
+            src={restaurant.videoThumb}
+            className="absolute inset-0 w-full h-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+        ) : restaurant.image ? (
           <img
             src={restaurant.image}
             alt={restaurant.name}
