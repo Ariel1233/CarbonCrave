@@ -14,6 +14,7 @@ import {
   Play,
   Pause,
   UtensilsCrossed,
+  Heart,
   X,
 } from 'lucide-react'
 import { restaurants } from '../data/restaurants'
@@ -58,6 +59,11 @@ const CUISINE_EMOJI: Record<string, string> = {
   'Nikkei Fusion': '🍣',
 }
 
+// Stable mock like counts per restaurant
+const MOCK_LIKES: Record<string, number> = Object.fromEntries(
+  restaurants.map(r => [r.id, Math.round(r.reviewCount * 3.7)]),
+)
+
 // ─── VideoCard ────────────────────────────────────────────────────────────────
 
 function VideoCard({
@@ -69,19 +75,21 @@ function VideoCard({
 }) {
   const { lang, t } = useLanguage()
   const containerRef = useRef<HTMLDivElement>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const videoRef     = useRef<HTMLVideoElement>(null)
   const onVisibleRef = useRef(onVisible)
   onVisibleRef.current = onVisible
 
-  const [playing, setPlaying] = useState(false)
-  const [muted, setMuted] = useState(true)
-  const [flashIcon, setFlashIcon] = useState<'play' | 'pause' | null>(null)
-  const [saved, setSaved] = useState(false)
+  const [playing, setPlaying]         = useState(false)
+  const [muted, setMuted]             = useState(true)
+  const [flashIcon, setFlashIcon]     = useState<'play' | 'pause' | null>(null)
+  const [saved, setSaved]             = useState(false)
+  const [liked, setLiked]             = useState(false)
+  const [likeCount, setLikeCount]     = useState(MOCK_LIKES[restaurant.id] ?? 0)
 
-  const cuisine = lang === 'es' ? restaurant.cuisineEs : restaurant.cuisine
+  const cuisine     = lang === 'es' ? restaurant.cuisineEs : restaurant.cuisine
   const featuredDish = lang === 'es' ? restaurant.featuredDishEs : restaurant.featuredDish
-  const emoji = CUISINE_EMOJI[restaurant.cuisine] ?? '🍽️'
-  const hasVideo = Boolean(restaurant.videoThumb)
+  const emoji       = CUISINE_EMOJI[restaurant.cuisine] ?? '🍽️'
+  const hasVideo    = Boolean(restaurant.videoThumb)
 
   const ecoTextColor =
     restaurant.badge === 'platinum' ? 'text-cyan-400'
@@ -89,7 +97,7 @@ function VideoCard({
     : restaurant.badge === 'silver' ? 'text-slate-300'
     : 'text-orange-400'
 
-  // Auto-play/pause via IntersectionObserver
+  // Auto-play / pause via IntersectionObserver
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -97,14 +105,10 @@ function VideoCard({
       ([entry]) => {
         if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
           onVisibleRef.current()
-          if (videoRef.current) {
-            videoRef.current.play().then(() => setPlaying(true)).catch(() => {})
-          }
+          videoRef.current?.play().then(() => setPlaying(true)).catch(() => {})
         } else {
-          if (videoRef.current) {
-            videoRef.current.pause()
-            setPlaying(false)
-          }
+          videoRef.current?.pause()
+          setPlaying(false)
         }
       },
       { threshold: 0.6 },
@@ -133,12 +137,17 @@ function VideoCard({
     setMuted(m => !m)
   }
 
+  const handleLike = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setLiked(prev => {
+      setLikeCount(c => prev ? c - 1 : c + 1)
+      return !prev
+    })
+  }
+
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full flex-shrink-0 snap-start overflow-hidden bg-black"
-      style={{ height: 'calc(100dvh - 57px)' }}
-    >
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-black">
+
       {/* ── Background: video or gradient ───────────── */}
       {hasVideo ? (
         <video
@@ -167,7 +176,7 @@ function VideoCard({
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'linear-gradient(to top, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.55) 32%, rgba(0,0,0,0.1) 60%, transparent 100%)',
+            'linear-gradient(to top, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.5) 30%, rgba(0,0,0,0.08) 58%, transparent 100%)',
         }}
       />
 
@@ -176,7 +185,7 @@ function VideoCard({
         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
           <div className="play-flash bg-black/45 rounded-full p-5 backdrop-blur-sm">
             {flashIcon === 'play'
-              ? <Play size={36} className="text-white fill-white ml-1" />
+              ? <Play  size={36} className="text-white fill-white ml-1" />
               : <Pause size={36} className="text-white fill-white" />}
           </div>
         </div>
@@ -207,28 +216,33 @@ function VideoCard({
         </button>
       )}
 
-      {/* ── Side action buttons (TikTok-style) ──────── */}
+      {/* ── Side action buttons ──────────────────────── */}
       <div
         className="absolute right-3 z-10 flex flex-col items-center gap-5"
-        style={{ bottom: 'calc(8rem + env(safe-area-inset-bottom, 0px))' }}
+        style={{ bottom: 'calc(8.5rem + env(safe-area-inset-bottom, 0px))' }}
       >
+        {/* Likes */}
+        <button
+          onClick={handleLike}
+          className="flex flex-col items-center gap-1"
+          aria-label={liked ? t('Unlike', 'Quitar me gusta') : t('Like', 'Me gusta')}
+        >
+          <div className={`w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm border transition-colors ${liked ? 'bg-red-500/20 border-red-400/60' : 'bg-black/50 border-white/25 hover:bg-black/70'}`}>
+            <Heart size={18} className={liked ? 'fill-red-400 text-red-400' : 'text-white'} />
+          </div>
+          <span className={`text-[11px] tabular-nums transition-colors ${liked ? 'text-red-400' : 'text-white/60'}`}>
+            {likeCount >= 1000 ? `${(likeCount / 1000).toFixed(1)}k` : likeCount}
+          </span>
+        </button>
+
         {/* Save */}
         <button
           onClick={() => setSaved(s => !s)}
           className="flex flex-col items-center gap-1"
           aria-label={saved ? t('Unsave', 'Eliminar') : t('Save', 'Guardar')}
         >
-          <div
-            className={`w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm border transition-colors ${
-              saved
-                ? 'bg-yellow-400/20 border-yellow-400/60'
-                : 'bg-black/50 border-white/25 hover:bg-black/70'
-            }`}
-          >
-            <Bookmark
-              size={18}
-              className={saved ? 'fill-yellow-400 text-yellow-400' : 'text-white'}
-            />
+          <div className={`w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm border transition-colors ${saved ? 'bg-yellow-400/20 border-yellow-400/60' : 'bg-black/50 border-white/25 hover:bg-black/70'}`}>
+            <Bookmark size={18} className={saved ? 'fill-yellow-400 text-yellow-400' : 'text-white'} />
           </div>
           <span className="text-white/60 text-[11px]">{t('Save', 'Guardar')}</span>
         </button>
@@ -274,7 +288,7 @@ function VideoCard({
           onClick={e => e.stopPropagation()}
           className="block mb-1"
         >
-          <h2 className="text-[1.65rem] font-bold text-white leading-tight hover:underline underline-offset-2">
+          <h2 className="text-[1.6rem] font-bold text-white leading-tight hover:underline underline-offset-2">
             {restaurant.name}
           </h2>
         </Link>
@@ -349,36 +363,31 @@ function VideoCard({
 
 export default function HomeFeed() {
   const { lang, t } = useLanguage()
-  const [activeIndex, setActiveIndex] = useState(0)
-  const [selectedHood, setSelectedHood] = useState<Neighborhood | 'All'>('All')
+  const [activeIndex, setActiveIndex]     = useState(0)
+  const [selectedHood, setSelectedHood]   = useState<Neighborhood | 'All'>('All')
   const [selectedCuisine, setSelectedCuisine] = useState('All')
   const [selectedBadge, setSelectedBadge] = useState('All')
-  const [showFilters, setShowFilters] = useState(false)
+  const [showFilters, setShowFilters]     = useState(false)
 
   const allCuisines = ['All', ...Array.from(new Set(restaurants.map(r => r.cuisine)))]
 
   const filtered = restaurants.filter(r => {
-    if (selectedHood !== 'All' && r.neighborhood !== selectedHood) return false
-    if (selectedCuisine !== 'All' && r.cuisine !== selectedCuisine) return false
-    if (selectedBadge !== 'All' && r.badge !== selectedBadge) return false
+    if (selectedHood    !== 'All' && r.neighborhood !== selectedHood)    return false
+    if (selectedCuisine !== 'All' && r.cuisine      !== selectedCuisine) return false
+    if (selectedBadge   !== 'All' && r.badge        !== selectedBadge)   return false
     return true
   })
 
   const activeFilterCount =
-    (selectedHood !== 'All' ? 1 : 0) +
+    (selectedHood    !== 'All' ? 1 : 0) +
     (selectedCuisine !== 'All' ? 1 : 0) +
-    (selectedBadge !== 'All' ? 1 : 0)
+    (selectedBadge   !== 'All' ? 1 : 0)
 
   const clearFilters = () => {
     setSelectedHood('All')
     setSelectedCuisine('All')
     setSelectedBadge('All')
     setActiveIndex(0)
-  }
-
-  const applyAndClose = () => {
-    setActiveIndex(0)
-    setShowFilters(false)
   }
 
   return (
@@ -413,7 +422,7 @@ export default function HomeFeed() {
             ))}
           </div>
 
-          {/* More filters button */}
+          {/* More filters */}
           <button
             onClick={() => setShowFilters(s => !s)}
             className={`relative flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full border transition-colors ${
@@ -430,17 +439,15 @@ export default function HomeFeed() {
               </span>
             )}
           </button>
+
+          {/* Counter */}
+          {filtered.length > 0 && (
+            <span className="flex-shrink-0 text-white/35 text-[11px] tabular-nums pl-1">
+              {activeIndex + 1}/{filtered.length}
+            </span>
+          )}
         </div>
       </div>
-
-      {/* ── Counter ──────────────────────────────────── */}
-      {filtered.length > 0 && (
-        <div className="fixed top-[57px] right-4 z-50 pt-2.5 pointer-events-none">
-          <span className="text-white/35 text-[11px] tabular-nums">
-            {activeIndex + 1} / {filtered.length}
-          </span>
-        </div>
-      )}
 
       {/* ── Filter panel (bottom sheet) ──────────────── */}
       {showFilters && (
@@ -452,10 +459,7 @@ export default function HomeFeed() {
             className="bg-gray-950 border-t border-white/10 rounded-t-3xl px-5 pt-5 pb-8 max-w-lg w-full mx-auto"
             onClick={e => e.stopPropagation()}
           >
-            {/* Handle */}
             <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5" />
-
-            {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-white font-semibold text-base">
                 {t('Filter Feed', 'Filtrar Feed')}
@@ -469,16 +473,12 @@ export default function HomeFeed() {
                     {t('Clear all', 'Limpiar todo')}
                   </button>
                 )}
-                <button
-                  onClick={() => setShowFilters(false)}
-                  className="text-white/50 hover:text-white transition-colors"
-                >
+                <button onClick={() => setShowFilters(false)} className="text-white/50 hover:text-white transition-colors">
                   <X size={18} />
                 </button>
               </div>
             </div>
 
-            {/* Cuisine */}
             <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-2.5">
               {t('Cuisine Type', 'Tipo de cocina')}
             </p>
@@ -493,14 +493,11 @@ export default function HomeFeed() {
                       : 'bg-transparent text-white/60 border-white/20 hover:border-white/40'
                   }`}
                 >
-                  {c === 'All'
-                    ? t('All cuisines', 'Todas las cocinas')
-                    : `${CUISINE_EMOJI[c] ?? '🍽️'} ${c}`}
+                  {c === 'All' ? t('All cuisines', 'Todas las cocinas') : `${CUISINE_EMOJI[c] ?? '🍽️'} ${c}`}
                 </button>
               ))}
             </div>
 
-            {/* Eco badge */}
             <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-2.5">
               {t('Eco Badge', 'Insignia Eco')}
             </p>
@@ -520,9 +517,8 @@ export default function HomeFeed() {
               ))}
             </div>
 
-            {/* Apply button */}
             <button
-              onClick={applyAndClose}
+              onClick={() => { setActiveIndex(0); setShowFilters(false) }}
               className={`w-full font-semibold text-sm py-3.5 rounded-2xl transition-colors ${
                 filtered.length > 0
                   ? 'bg-green-600 hover:bg-green-500 text-white'
@@ -551,15 +547,26 @@ export default function HomeFeed() {
       >
         {filtered.length > 0 ? (
           filtered.map((restaurant, i) => (
-            <VideoCard
+            /* Snap-align wrapper — full width, exact viewport height */
+            <div
               key={restaurant.id}
-              restaurant={restaurant}
-              onVisible={() => setActiveIndex(i)}
-            />
+              style={{
+                scrollSnapAlign: 'start',
+                height: 'calc(100dvh - 97px)',
+              }}
+            >
+              {/* Centered iPhone-width column — matches rest of the dashboard */}
+              <div className="max-w-lg mx-auto h-full relative bg-black overflow-hidden">
+                <VideoCard
+                  restaurant={restaurant}
+                  onVisible={() => setActiveIndex(i)}
+                />
+              </div>
+            </div>
           ))
         ) : (
           <div
-            className="flex items-center justify-center text-center px-8"
+            className="max-w-lg mx-auto flex items-center justify-center text-center px-8"
             style={{ height: 'calc(100dvh - 97px)' }}
           >
             <div>

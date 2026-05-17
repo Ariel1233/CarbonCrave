@@ -40,7 +40,6 @@ const ZONES: Zone[] = [
   { id: 'Calle Ocho',   x: 94,  y: 108, w: 92,  h: 78,  rx: 8,  fill: '#fef3c7', stroke: '#fbbf24', cx: 140, cy: 142 },
   { id: 'Little Haiti', x: 126, y: 16,  w: 88,  h: 68,  rx: 8,  fill: '#fee2e2', stroke: '#f87171', cx: 170, cy: 50  },
   { id: 'Wynwood',      x: 150, y: 86,  w: 72,  h: 60,  rx: 8,  fill: '#ede9fe', stroke: '#a78bfa', cx: 186, cy: 116 },
-  { id: 'Overtown',     x: 164, y: 148, w: 64,  h: 66,  rx: 8,  fill: '#ffedd5', stroke: '#fb923c', cx: 196, cy: 181 },
   { id: 'Brickell',     x: 230, y: 128, w: 64,  h: 82,  rx: 8,  fill: '#dbeafe', stroke: '#60a5fa', cx: 262, cy: 169 },
   { id: 'Coral Gables', x: 88,  y: 186, w: 94,  h: 76,  rx: 8,  fill: '#fae8ff', stroke: '#e879f9', cx: 135, cy: 224 },
   { id: 'South Beach',  x: 292, y: 82,  w: 48,  h: 172, rx: 12, fill: '#cffafe', stroke: '#22d3ee', cx: 316, cy: 168 },
@@ -54,16 +53,14 @@ const PIN_POS: Record<string, [number, number]> = {
   '3':  [46,  122],
   '4':  [148, 42],
   '5':  [184, 110],
-  '6':  [188, 170],
-  '7':  [310, 164],
-  '8':  [124, 214],
-  '9':  [108, 156],
-  '10': [172, 58],
+  '6':  [108, 214],
+  '8':  [135, 228],
+  '9':  [310, 164],
 }
 
 const NEIGHBORHOODS: Neighborhood[] = [
   'Doral', 'Calle Ocho', 'Little Haiti', 'Wynwood',
-  'Overtown', 'Brickell', 'Coral Gables', 'South Beach',
+  'Brickell', 'Coral Gables', 'South Beach',
 ]
 
 const ECO_FILTERS = [
@@ -198,10 +195,14 @@ function PreviewCard({
         <div className="flex items-start gap-3 mb-3">
           {/* Thumbnail */}
           <div
-            className={`w-14 h-14 rounded-xl bg-gradient-to-br ${r.videoColor} flex items-center justify-center flex-shrink-0 cursor-pointer`}
+            className={`w-14 h-14 rounded-xl bg-gradient-to-br ${r.videoColor} flex items-center justify-center flex-shrink-0 cursor-pointer overflow-hidden`}
             onClick={onView}
           >
-            <span className="text-white text-xl font-bold opacity-90">{r.name[0]}</span>
+            {r.image ? (
+              <img src={r.image} alt={r.name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-white text-xl font-bold opacity-90">{r.name[0]}</span>
+            )}
           </div>
 
           <div className="flex-1 min-w-0">
@@ -306,9 +307,13 @@ function ListRow({
       className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm cursor-pointer hover:shadow active:scale-[0.99] transition-all"
     >
       <div
-        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${r.videoColor} flex items-center justify-center flex-shrink-0`}
+        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${r.videoColor} flex items-center justify-center flex-shrink-0 overflow-hidden`}
       >
-        <span className="text-white text-lg font-bold">{r.name[0]}</span>
+        {r.image ? (
+          <img src={r.image} alt={r.name} className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-white text-lg font-bold">{r.name[0]}</span>
+        )}
       </div>
 
       <div className="flex-1 min-w-0">
