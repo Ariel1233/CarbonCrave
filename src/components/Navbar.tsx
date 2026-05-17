@@ -18,11 +18,15 @@ export default function Navbar() {
     <>
       {/* Top bar */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100">
-        <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
+        <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-2">
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl">🌿</span>
-            <span className="font-black text-xl text-green-800 tracking-tight">
-              Carbon<span className="text-emerald-500">Crave</span>
+            <img
+              src="/logo-icon.png"
+              alt="CarbonCrave"
+              className="h-10 w-auto object-contain"
+            />
+            <span className="font-black text-xl tracking-tight">
+              <span className="text-green-900">Carbon</span><span className="text-orange-500">Crave</span>
             </span>
           </Link>
 
